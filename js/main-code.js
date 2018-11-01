@@ -4,13 +4,13 @@ const design = {																			//takes care of what to show and what to hide
 		$(`#color`).val(`cornflowerblue`);
 		$(`#color option`).slice(0,3).show();
 		$(`#color option`).slice(3).hide();
-		$(`.shirt div:first, .shirt div:last`).fadeIn();
+		$(`.shirt div:first, .shirt div:last`).slideDown();
 	},
 	heart_js: () => {
 		$(`#color`).val(`tomato`);
 		$(`#color option`).slice(0,3).hide();
 		$(`#color option`).slice(3).show();
-		$(`.shirt div:first, .shirt div:last`).fadeIn();
+		$(`.shirt div:first, .shirt div:last`).slideDown();
 	}
 }
 const activityNames = [																		//an array with all the activities with the name, the cost and if it coincides with another activity, 
@@ -50,14 +50,14 @@ const payment = {																			//shows the right content when the user choo
 	bitcoin: () => payment.type(2),
 }
 const showError = (name, errorMessage) => {											//fades in the error message
-	$(`${name} .errorBox`).text(errorMessage).fadeIn(700);
+	$(`${name} .errorBox`).text(errorMessage).slideDown(700);
 	$('html, body').animate({
             scrollTop: $(name).offset().top
     }, 500);
     return false;
 }
 const hideError = name => {															//fades out the error message
-	$(`${name} .errorBox`).fadeOut(700);
+	$(`${name} .errorBox`).slideUp(700);
 	return true;
 }
 const checkName = () => {															//checks Name and Emain
@@ -118,7 +118,7 @@ $(`.errorBox`).css({
 });
 $(`.shirt div:first, .shirt div:last`).hide();
 /**************************event listeners**************************/
-$(`#title`).on(`change`, () => ($(`#title`).val() === `other`)?$(`#other-title`).show():$(`#other-title`).hide());//shows the "other" input field when user chooses the title
+$(`#title`).on(`change`, () => ($(`#title`).val() === `other`)?$(`#other-title`).slideDown():$(`#other-title`).slideUp());//shows the "other" input field when user chooses the title
 $(`#design`).on(`change`, () => design[$(`#design`).val()]());							  //shows and hides options form the color selection
 //in this next line, will add an event listener to each activity checkbox, if the activity coincides with another, this will be hidden
 $(`.activities input`).each((index, activity) => $(activity).on(`change`, activityNames[index], (activityNames[index].coincides === undefined)? changeTotal : hideElement));
