@@ -4,11 +4,13 @@ const design = {																			//takes care of what to show and what to hide
 		$(`#color`).val(`cornflowerblue`);
 		$(`#color option`).slice(0,3).show();
 		$(`#color option`).slice(3).hide();
+		$(`.shirt div:first, .shirt div:last`).fadeIn();
 	},
 	heart_js: () => {
 		$(`#color`).val(`tomato`);
 		$(`#color option`).slice(0,3).hide();
 		$(`#color option`).slice(3).show();
+		$(`.shirt div:first, .shirt div:last`).fadeIn();
 	}
 }
 const activityNames = [																		//an array with all the activities with the name, the cost and if it coincides with another activity, 
@@ -47,64 +49,83 @@ const payment = {																			//shows the right content when the user choo
 	paypal: () => payment.type(1),
 	bitcoin: () => payment.type(2),
 }
+const showError = (name, errorMessage) => {											//fades in the error message
+	$(`${name} .errorBox`).text(errorMessage).fadeIn(700);
+	$('html, body').animate({
+            scrollTop: $(name).offset().top
+    }, 500);
+    return false;
+}
+const hideError = name => {															//fades out the error message
+	$(`${name} .errorBox`).fadeOut(700);
+	return true;
+}
+const checkName = () => {															//checks Name and Emain
+	if (!/\w+/.test($(`#name`).val()))
+		return showError(`fieldset:first`, `insert a valid name`);
+	if (!/\w+@\w+\.\w+/.test($(`#mail`).val()))
+		return showError(`fieldset:first`, `insert a valid email`);
+	return hideError(`fieldset:first`);
+}
+const checkActivities = () => {														//checks that at least one activity is active
+	const inputs = $(`.activities input`);
+	for (let i = 0; i < inputs.length; i++)
+		if (inputs.eq(i).prop(`checked`))
+			return hideError(`fieldset.activities`);
+	return showError(`fieldset.activities`, `You must have atleast one activity checked`);
+}
+const checkPayment = () => {														//checks payment, if credit card has been selected, will check number, zip and cvv
+	const payType = $(`#payment`).val();
+	if (payType === `paypal` || payType === `bitcoin`)
+		return hideError(`fieldset:last`);
+	else if (payType === `credit_card`) {
+		if (!/^\d+$/.test($(`#cc-num`).val()))
+			return showError(`fieldset:last`, `insert a credit card number`);
+		if (!/^\d{13,}$/.test($(`#cc-num`).val()))
+			return showError(`fieldset:last`, `insert a credit card number with at least 13 numbers`);
+		if (!/^\d{13,16}$/.test($(`#cc-num`).val()))
+			return showError(`fieldset:last`, `insert a credit card number with less than 16 numbers`);
+		if (!/^\d+$/.test($(`#zip`).val()))
+			return showError(`fieldset:last`, `insert a zip code`);
+		if (!/^\d{5,}$/.test($(`#zip`).val()))
+			return showError(`fieldset:last`, `insert a zip code with 5 numbers`);
+		if (!/^\d{5}$/.test($(`#zip`).val()))
+			return showError(`fieldset:last`, `insert zip code with less than 6 numbers`);
+		if (!/^\d+$/.test($(`#cvv`).val()))
+			return showError(`fieldset:last`, `insert cvv number`);
+		if (!/^\d{3,}$/.test($(`#cvv`).val()))
+			return showError(`fieldset:last`, `insert cvv with 3 numbers`);
+		if (!/^\d{3}$/.test($(`#cvv`).val()))
+			return showError(`fieldset:last`, `insert cvv with less than 4 numbers`);
+		return hideError(`fieldset:last`);
+	}
+}
 /**************************initial changes to the DOM**************************/
 $(`#other-title`).hide();															//hides the "other" input field
 $(`#name`).focus();																	//gives focus to the first input element
 $(`#design option:first`).hide();													//hides the default design option so the user can't choose it
 $(`option[value=select_method]`).hide();											//hides the default payment method
 $(`.activities`).append(`<h3>Your total is : <span id="total">0</span>$</h3>`);		//creates and appends the element that will display the total cost
+$(`#payment`).val(`credit_card`);
 payment.credit_card();																//sets the credit card as the default method
+$(`fieldset`).each((index, field) => $(field).append(`<h3 class="errorBox">eroor</h3>`)); //where the errors will be displayed
+$(`.errorBox`).css({
+	backgroundColor: `#9B1B16`,
+	color: `#E7E8E7`,
+	textAlign: `center`,
+	display: `none`,
+	padding: `10px`
+});
+$(`.shirt div:first, .shirt div:last`).hide();
 /**************************event listeners**************************/
-$(`#title`).on(`change`, () => ($(`#title`).val() === `other`)?input.show():input.hide());//shows the "other" input field when user chooses the title
+$(`#title`).on(`change`, () => ($(`#title`).val() === `other`)?$(`#other-title`).show():$(`#other-title`).hide());//shows the "other" input field when user chooses the title
 $(`#design`).on(`change`, () => design[$(`#design`).val()]());							  //shows and hides options form the color selection
 //in this next line, will add an event listener to each activity checkbox, if the activity coincides with another, this will be hidden
 $(`.activities input`).each((index, activity) => $(activity).on(`change`, activityNames[index], (activityNames[index].coincides === undefined)? changeTotal : hideElement));
+$(`fieldset:first input:nth-of-type(-n+2)`).on(`input`, checkName);						//shows real time error messages
 $(`#payment`).on(`change`, e => payment[$(e.target).val()]());							//shows the content depending on the payment method
+$(`#credit-card input[type=text], #payment`).on(`input`, checkPayment);					//shows real time error messages
 $(`form`).on(`submit`, e => {															//the submit form listener, here will be checked that the information is in order
-	const checkName = () => {															//checks Name and Emain
-		if (!/\w+/.test($(`#name`).val())){
-			alert(`insert your name`);
-			return false;
-		}
-		if (!/\w+@\w+.\w+/.test($(`#mail`).val())){
-			alert(`insert your email`);
-			return false;
-		}
-		return true;
-	}
-	const checkActivities = () => {														//checks that at least one activity is active
-		const inputs = $(`.activities input`);
-		for (let i = 0; i < inputs.length; i++){
-			if (inputs.eq(i).prop(`checked`))
-				return true;
-		}
-		alert(`You must have atleast one activity checked`);
-		return false;
-	}
-	const checkPayment = () => {														//checks payment, if credit card has been selected, will check number, zip and cvv
-		const payType = $(`#payment`).val();
-		if (payType === `paypal` || payType === `bitcoin`)
-			return true;
-		else if (payType === `credit_card`) {
-			if (!/^\d{13,16}$/.test($(`#cc-num`).val())){
-				alert(`insert your credit card number`);
-				return false;
-			}
-			if (!/^\d{5}$/.test($(`#zip`).val())){
-				alert(`insert your zip code`);
-				return false;
-			}
-			if (!/^\d{3}$/.test($(`#cvv`).val())){
-				alert(`insert your cvv`);
-				return false;
-			}
-			return true;
-		} else {
-			alert(`You must insert your payment info`);
-			return false;
-		}
-	}
-	e.preventDefault();
-	if (checkName() && checkActivities() && checkPayment())							//if everything is in order the user is created
-		alert('user created');
+	if (!(checkName() && checkActivities() && checkPayment()))							//if everything is in order the user is created
+		e.preventDefault();	
 });
